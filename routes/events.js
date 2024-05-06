@@ -71,12 +71,16 @@ router.post("/upload", upload.array("photos", 10), (req, res) => {
           if (error) {
             reject(error);
           } else {
+            // Delete the file from the server after successful upload
+            fs.unlink(file.path, (unlinkError) => {
+              if (unlinkError) {
+                console.error("Error deleting file:", unlinkError);
+              }
+            });
             resolve(result.secure_url);
           }
         }
       );
-      // Delete uploaded image file
-    fs.unlinkSync(req.file.path);
     });
   });
 
