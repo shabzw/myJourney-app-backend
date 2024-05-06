@@ -12,7 +12,6 @@ router.get("/gettimeline/", fetchuser, async (req, res) => {
   try {
     // const studentId = req.header("studentId");
     const data = await Timelines.find();
-    console.log(data);
     res.json(data);
   } catch (error) {
     console.error(error.message);
