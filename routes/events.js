@@ -5,7 +5,7 @@ const multer = require("multer");
 
 // const User = require("../models/User");
 const Timelines = require("../models/Timelines");
-const Events = require("../models/events");
+const Events = require("../models/Events");
 const fetchuser = require("../middleware/fetchuser");
 const fs = require("fs");
 const cloudinary = require("cloudinary").v2;
