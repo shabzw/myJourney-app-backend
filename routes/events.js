@@ -8,6 +8,7 @@ const Timelines = require("../models/Timelines");
 const Events = require("../models/Events");
 const fetchuser = require("../middleware/fetchuser");
 const fs = require("fs");
+const { default: mongoose } = require("mongoose");
 const cloudinary = require("cloudinary").v2;
 
 cloudinary.config({
@@ -31,8 +32,13 @@ router.post("/addevent/", fetchuser, async (req, res) => {
 
     // Save the new data to the database
     await newData.save();
+    const objId = new mongoose.Types.ObjectId(newData.id);
+    const pushData = await Timelines.updateOne(
+      { _id: timelineId },
+      { $push: { events: objId } },
+      { upsert: false, new: true }
+    );
     const data = await Events.find({ timelineId: timelineId });
-
     res.json(data);
   } catch (error) {
     console.error(error.message);
@@ -51,12 +57,57 @@ router.get("/getevents/", fetchuser, async (req, res) => {
     res.status(500).send("Internal Server Error occured");
   }
 });
+router.get("/getEdata/", fetchuser, async (req, res) => {
+  try {
+    const timelines = await Timelines.find().populate("events").exec();
+
+    // Extract all events from the populated timelines
+
+    // Send all populated events data as a response
+    res.json(timelines);
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send("Internal Server Error occurred");
+  }
+});
+
+router.get("/getsingleevent/", fetchuser, async (req, res) => {
+  try {
+    const eventId = req.headers["eventid"];
+
+    const data = await Events.findById(eventId);
+
+    // Extract all events from the populated timelines
+
+    // Send all populated events data as a response
+    res.json(data);
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send("Internal Server Error occurred");
+  }
+});
 
 const upload = multer({
   dest: "uploads/", // Destination directory for uploaded files
   limits: {
     fileSize: 10 * 1024 * 1024, // 10 MB file size limit (in bytes)
   },
+});
+
+router.post("/uploadsingle/", upload.single("photo"), async (req, res) => {
+  try {
+    // Upload image to Cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path);
+
+    // Delete uploaded image file
+    await fs.unlinkSync(req.file.path);
+
+    // Return image URL
+    res.json({ imageUrl: result.secure_url });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 // Route for handling file uploads
@@ -96,6 +147,84 @@ router.post("/upload", upload.array("photos", 10), (req, res) => {
         error: "Error uploading images to Cloudinary",
       });
     });
+});
+
+router.get("/gettimelineevent/", fetchuser, async (req, res) => {
+  try {
+    const eventId = req.headers["eventid"];
+    const timelineId = req.headers["timelineid"];
+    const timelineEvent = await Timelines.findById(eventId)
+      .populate({
+        path: "events",
+        match: { _id: timelineId },
+      })
+      .exec();
+    // Extract all events from the populated timelines
+
+    // Send all populated events data as a response
+    res.json(timelineEvent);
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send("Internal Server Error occurred");
+  }
+});
+
+router.put("/updateevents/", fetchuser, async (req, res) => {
+  try {
+    const {
+      date,
+      place,
+      source,
+      intro,
+      keyComponents,
+      headings,
+      images,
+      paragraphs,
+    } = req.body; // Destructure properties from req.body
+    const id = req.header("eventId");
+
+    const dataEdit = await Events.findById(id);
+    dataEdit.set({
+      date,
+      place,
+      source,
+      intro,
+      keyComponents,
+      headings,
+      images,
+      paragraphs,
+    });
+
+    await dataEdit.save();
+    // const data = await Events.find({idNumber : studentId})
+
+    res.json({ message: "Data updation successfull" });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send("Internal Server Error occured");
+  }
+});
+
+router.put("/updateInfo/", fetchuser, async (req, res) => {
+  try {
+    const { headingE, imageE, paraE } = req.body; // Destructure properties from req.body
+    const id = req.header("eventId");
+
+    const dataEdit = await Events.findById(id);
+    dataEdit.set({
+      headings: headingE,
+      images: imageE,
+      paragraphs: paraE,
+    });
+
+    await dataEdit.save();
+    // const data = await Events.find({idNumber : studentId})
+
+    res.json({ message: "Data updation successfull" });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send("Internal Server Error occured");
+  }
 });
 
 module.exports = router;

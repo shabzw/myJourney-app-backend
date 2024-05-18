@@ -10,7 +10,6 @@ const fs = require("fs");
 
 router.get("/gettimeline/", fetchuser, async (req, res) => {
   try {
-    // const studentId = req.header("studentId");
     const data = await Timelines.find();
     res.json(data);
   } catch (error) {
@@ -20,14 +19,14 @@ router.get("/gettimeline/", fetchuser, async (req, res) => {
 });
 router.post("/addtimeline/", fetchuser, async (req, res) => {
   try {
-    const { timelineName, shortDesc, photo } = req.body;
+    const { timelineName, shortDesc, photoThumbnails, coordinates } = req.body;
     // Destructure properties from req.body
-    // const studentId = req.header("studentId");
     // Create a new Data instance with individual properties
     const newData = new Timelines({
       timelineName: timelineName,
       shortDesc: shortDesc,
-      photo: photo,
+      photoThumbnails: photoThumbnails,
+      coordinates: coordinates,
     });
 
     // Save the new data to the database
@@ -57,20 +56,42 @@ const upload = multer({
   },
 });
 
-router.post("/upload/", upload.single("photo"), async (req, res) => {
-  try {
-    // Upload image to Cloudinary
-    const result = await cloudinary.uploader.upload(req.file.path);
+router.post("/upload", upload.array("photos", 10), (req, res) => {
+  const files = req.files;
+  const uploadPromises = files.map((file) => {
+    return new Promise((resolve, reject) => {
+      cloudinary.uploader.upload(
+        file.path,
+        { folder: "uploaded-images" },
+        (error, result) => {
+          if (error) {
+            reject(error);
+          } else {
+            // Delete the file from the server after successful upload
+            fs.unlink(file.path, (unlinkError) => {
+              if (unlinkError) {
+                console.error("Error deleting file:", unlinkError);
+              }
+            });
+            resolve(result.secure_url);
+          }
+        }
+      );
+    });
+  });
 
-    // Delete uploaded image file
-    await fs.unlinkSync(req.file.path);
-
-    // Return image URL
-    res.json({ imageUrl: result.secure_url });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Internal server error" });
-  }
+  Promise.all(uploadPromises)
+    .then((uploadedUrls) => {
+      // Send an array of uploaded URLs back to the client
+      res.json({ success: true, filenames: uploadedUrls }); // Modify to match frontend expectations
+    })
+    .catch((error) => {
+      console.error("Error uploading images to Cloudinary:", error);
+      res.status(500).json({
+        success: false,
+        error: "Error uploading images to Cloudinary",
+      });
+    });
 });
 
 module.exports = router;

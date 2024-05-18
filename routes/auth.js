@@ -113,18 +113,6 @@ router.post(
   }
 );
 
-// router.post("/getuserinfo/", fetchuser, async (req, res) => {
-//   try {
-//     const userInfo = await User.findById({ _id: req.user.id }).select(
-//       "-password"
-//     );
-//     res.send(userInfo);
-//   } catch (error) {
-//     console.error(error.message);
-//     res.status(500).send("Internal Server Error occured");
-//   }
-// });
-
 module.exports = router;
 
 module.exports = router;

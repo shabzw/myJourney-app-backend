@@ -9,6 +9,14 @@ const eventsSchema = new Schema({
   photos: [{ type: String, required: true }],
   period: { type: String, required: true },
   lastUpdated: { type: Date, default: Date.now },
+  intro : { type: String},
+  date : { type: String},
+  place : { type: String},
+  source : { type: String},
+  keyComponents : { type: String},
+  headings : [{ type: String}],
+  paragraphs : [{ type: String}],
+  images : [{ type: String}]
 });
 
 const EventsModel = mongoose.model("Events", eventsSchema);
