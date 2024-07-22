@@ -3,6 +3,7 @@ const { Schema } = mongoose;
 
 const eventsSchema = new Schema({
   timelineId: { type: mongoose.Schema.Types.ObjectId, ref: "Timelines" },
+  ownerId: {type: mongoose.Schema.Types.ObjectId, ref: "User"},
   eventName: { type: String, required: true },
   para1: { type: String, required: true },
   para2: { type: String, required: true },

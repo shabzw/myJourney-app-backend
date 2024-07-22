@@ -3,7 +3,6 @@ const app = express();
 const router = express.Router();
 const multer = require("multer");
 
-// const User = require("../models/User");
 const Timelines = require("../models/Timelines");
 const Events = require("../models/Events");
 const fetchuser = require("../middleware/fetchuser");
@@ -22,6 +21,7 @@ router.post("/addevent/", fetchuser, async (req, res) => {
     const { timelineId, eventName, para1, para2, period, photos } = req.body;
     // Destructure properties from req.body
     const newData = new Events({
+      ownerId: req.user.id,
       timelineId: timelineId,
       eventName: eventName,
       para1: para1,
@@ -46,6 +46,36 @@ router.post("/addevent/", fetchuser, async (req, res) => {
   }
 });
 
+router.put("/editevent/", fetchuser, async (req, res) => {
+  try {
+    const {
+      eventNameE,
+      para1E,
+      para2E,
+      periodE,
+      eventId,
+      timelineId,
+      photosE,
+    } = req.body; // Destructure properties from req.body
+    const dataEdit = await Events.findById(eventId);
+    dataEdit.set({
+      eventName: eventNameE,
+      para1: para1E,
+      para2: para2E,
+      period: periodE,
+      photos: photosE,
+    });
+
+    await dataEdit.save();
+    // const data = await Events.find({idNumber : studentId})
+    const updatedEvents = await Events.find({ timelineId: timelineId });
+    res.json(updatedEvents);
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send("Internal Server Error occured");
+  }
+});
+
 router.get("/getevents/", fetchuser, async (req, res) => {
   try {
     const id = req.header("timelineId");
@@ -60,9 +90,6 @@ router.get("/getevents/", fetchuser, async (req, res) => {
 router.get("/getEdata/", fetchuser, async (req, res) => {
   try {
     const timelines = await Timelines.find().populate("events").exec();
-
-    // Extract all events from the populated timelines
-
     // Send all populated events data as a response
     res.json(timelines);
   } catch (error) {
@@ -76,9 +103,6 @@ router.get("/getsingleevent/", fetchuser, async (req, res) => {
     const eventId = req.headers["eventid"];
 
     const data = await Events.findById(eventId);
-
-    // Extract all events from the populated timelines
-
     // Send all populated events data as a response
     res.json(data);
   } catch (error) {
@@ -159,8 +183,6 @@ router.get("/gettimelineevent/", fetchuser, async (req, res) => {
         match: { _id: timelineId },
       })
       .exec();
-    // Extract all events from the populated timelines
-
     // Send all populated events data as a response
     res.json(timelineEvent);
   } catch (error) {
@@ -224,6 +246,27 @@ router.put("/updateInfo/", fetchuser, async (req, res) => {
   } catch (error) {
     console.error(error.message);
     res.status(500).send("Internal Server Error occured");
+  }
+});
+
+router.delete("/deleteevent/", fetchuser, async (req, res) => {
+  const { delEventId, timelineId } = req.body; // Extract the document ID from the request parameters
+  try {
+    // Check if the document with the specified ID exists
+    const existingData = await Events.findOne({ _id: delEventId });
+
+    if (!existingData) {
+      return res.status(404).json({ message: "Data not found" });
+    }
+    // Update the collection by deleting the document with the specified ID
+    await Events.deleteOne({ _id: delEventId });
+
+    const data = await Events.find({ timelineId: timelineId });
+
+    res.json(data);
+  } catch (error) {
+    console.error("Error deleting data:", error);
+    res.status(500).json({ message: "Internal Server Error occurred" });
   }
 });
 

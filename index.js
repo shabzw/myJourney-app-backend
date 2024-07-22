@@ -21,6 +21,7 @@ app.get("/health", async (req, res) => {
 app.use('/api/auth/', require('./routes/auth'))
 app.use('/api/timeline/', require('./routes/timelines'))
 app.use('/api/events/', require('./routes/events'))
+app.use('/api/tempevents/', require('./routes/tempevents'))
 
 app.listen(port, () => {
   console.log(`backend listening on port ${port}`)

@@ -3,7 +3,6 @@ const router = express.Router();
 const User = require("../models/User");
 var bcrypt = require("bcryptjs");
 var jwt = require("jsonwebtoken");
-var fetchuser = require("../middleware/fetchuser");
 
 const { body, validationResult } = require("express-validator");
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -53,8 +52,6 @@ router.post(
       };
       const authtoken = jwt.sign(data, JWT_SECRET);
       success = true;
-      // const loggedInData = await User.find({ email: user.email });
-
       res.json({ success, authtoken });
     } catch (error) {
       console.error(error.message);
@@ -105,10 +102,10 @@ router.post(
       // const loggedInData = await User.find({ email: user.email });
       const authtoken = jwt.sign(data, JWT_SECRET);
       success = true;
-      res.json({ success, authtoken });
+      res.json({ success, authtoken, userId: user.id });
     } catch (error) {
       console.error(error.message);
-      res.status(500).send("Internal Server Error occured");
+      res.status(500).send({ success });
     }
   }
 );
