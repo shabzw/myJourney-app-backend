@@ -72,7 +72,6 @@ router.put("/edittimeline/", fetchuser, async (req, res) => {
     await dataEdit.save();
     // const data = await Events.find({idNumber : studentId})
     const updatedTimelines = await Timelines.find({ userId: req.user.id });
-    console.log(updatedTimelines);
     res.json(updatedTimelines);
   } catch (error) {
     console.error(error.message);

@@ -75,7 +75,6 @@ router.put("/rejectrequest/", fetchuser, async (req, res) => {
   let success = false;
   try {
     const { eventId, status } = req.body; // Destructure properties from req.body
-    console.log(eventId, status);
     const dataEdit = await TempEvents.findById(eventId);
     dataEdit.set({
       status: status,
@@ -151,20 +150,7 @@ router.put("/rerequest/", fetchuser, async (req, res) => {
       paragraphs,
       images,
     } = req.body; // Destructure properties from req.body
-    console.log(
-      tempEventId,
-      status,
-      place,
-      date,
-      intro,
-      source,
-      keyComponents,
-      headings,
-      paragraphs,
-      images
-    );
     const dataEdit = await TempEvents.findById(tempEventId);
-    console.log(dataEdit);
     dataEdit.set({
       status: status,
       place,
